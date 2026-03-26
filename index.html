@@ -506,21 +506,6 @@
         }
 
         /* ── IFRAME TORNEOS ── */
-        .torneos-iframe-wrap {
-            width: 100%;
-            height: calc(100vh - 160px);
-            min-height: 500px;
-            overflow: hidden;
-            background: #f8f8f8;
-        }
-
-        .torneos-iframe-wrap iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
-        }
-
         .torneos-loading {
             display: flex;
             flex-direction: column;
@@ -543,6 +528,75 @@
 
         @keyframes spin-tab {
             to { transform: rotate(360deg); }
+        }
+
+        /* ── PANEL TORNEOS LANDING ── */
+        .torneos-landing {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 24px;
+            text-align: center;
+            min-height: 400px;
+        }
+
+        .torneos-logo {
+            font-size: 5em;
+            margin-bottom: 16px;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+        }
+
+        .torneos-title {
+            font-family: 'Arial', sans-serif;
+            font-size: 2em;
+            font-weight: 900;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #111;
+            margin-bottom: 12px;
+        }
+
+        .torneos-sub {
+            font-size: 0.95em;
+            color: #666;
+            max-width: 300px;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .torneos-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #111;
+            color: #fff;
+            text-decoration: none;
+            padding: 16px 36px;
+            border-radius: 50px;
+            font-size: 1.05em;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .torneos-btn:hover {
+            background: #333;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(0,0,0,0.25);
+        }
+
+        .torneos-btn:active {
+            transform: scale(0.97);
+        }
+
+        .torneos-hint {
+            margin-top: 14px;
+            font-size: 0.75em;
+            color: #bbb;
+            letter-spacing: 0.5px;
         }
     </style>
 </head>
@@ -911,14 +965,14 @@
 
         <!-- ── PANEL: TORNEOS ── -->
         <div class="section-panel" id="panel-torneos">
-            <div class="torneos-iframe-wrap">
-                <iframe
-                    id="torneos-frame"
-                    src=""
-                    title="Torneos Negro Padel"
-                    allow="fullscreen"
-                    loading="lazy"
-                ></iframe>
+            <div class="torneos-landing">
+                <div class="torneos-logo">🏆</div>
+                <h2 class="torneos-title">Torneos en Vivo</h2>
+                <p class="torneos-sub">Seguí los partidos, posiciones y cuadros eliminatorios en tiempo real.</p>
+                <a href="https://torneos.negropadel.com.ar" target="_blank" class="torneos-btn">
+                    Ver torneos →
+                </a>
+                <p class="torneos-hint">Se abre en una nueva pestaña</p>
             </div>
         </div>
 
@@ -950,14 +1004,12 @@
 
     <script>
         // ── SWITCH DE SECCIONES ──────────────────────────────
-        const TORNEOS_URL = 'https://torneos.negropadel.com'; // <-- cambiá por tu URL real
-        window._torneosLoaded = false; // persiste entre rerenders
+        const TORNEOS_URL = 'https://torneos.negropadel.com.ar'; // <-- cambiá por tu URL real
 
         // Detectar si corre como PWA standalone en iOS
         const isIOSStandalone = window.navigator.standalone === true;
         // En iOS standalone, los iframes de dominios cruzados pueden fallar
         // En ese caso abrimos en nueva ventana como fallback
-        // torneosLoaded is window._torneosLoaded
 
         function switchSection(section) {
             // Tabs
@@ -968,63 +1020,12 @@
             document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
             document.getElementById('panel-' + section).classList.add('active');
 
-            // Actualizar hash de URL (permite deep link y shortcuts PWA)
+            // Actualizar hash
             history.replaceState(null, '', '#' + section);
-
-            if (section === 'torneos') {
-                // En iOS PWA standalone, los iframes cross-origin son problemáticos
-                // Usamos iframe normal y si falla, mostramos botón de abrir
-                if (!window._torneosLoaded) {
-                    window._torneosLoaded = true;
-                    const wrap = document.getElementById('panel-torneos').querySelector('.torneos-iframe-wrap');
-
-                    wrap.innerHTML = '<div class="torneos-loading"><div class="torneos-spinner"></div><span>Cargando torneos...</span></div>';
-
-                    const newFrame = document.createElement('iframe');
-                    newFrame.id    = 'torneos-frame';
-                    newFrame.src   = TORNEOS_URL;
-                    newFrame.title = 'Torneos Negro Padel';
-                    newFrame.allow = 'fullscreen';
-                    newFrame.style.cssText = 'width:100%;height:100%;border:none;display:block;';
-
-                    newFrame.onload = () => {
-                        wrap.innerHTML = '';
-                        wrap.appendChild(newFrame);
-                    };
-
-                    newFrame.onerror = () => {
-                        mostrarFallbackTorneos(wrap);
-                    };
-
-                    // Timeout de seguridad
-                    setTimeout(() => {
-                        if (wrap.querySelector('.torneos-loading')) {
-                            wrap.innerHTML = '';
-                            wrap.appendChild(newFrame);
-                        }
-                    }, 8000);
-                }
-            }
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function mostrarFallbackTorneos(wrap) {
-            wrap.innerHTML = `
-                <div class="torneos-loading" style="flex-direction:column;gap:20px;padding:40px;text-align:center;">
-                    <div style="font-size:3em;">🏆</div>
-                    <div style="font-size:1.1em;font-weight:700;color:#111;">Torneos Negro Padel</div>
-                    <div style="font-size:0.85em;color:#888;">Seguí los torneos en vivo</div>
-                    <a href="${TORNEOS_URL}" target="_blank" style="
-                        display:inline-block;
-                        background:#16a34a;color:#fff;
-                        padding:14px 28px;border-radius:10px;
-                        font-weight:700;font-size:0.95em;
-                        text-decoration:none;letter-spacing:0.5px;
-                    ">Ver torneos →</a>
-                </div>
-            `;
-        }
 
         // Si la URL tiene #torneos al abrir, activar esa tab
         if (window.location.hash === '#torneos') {
